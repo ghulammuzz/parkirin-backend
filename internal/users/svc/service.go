@@ -11,11 +11,11 @@ import (
 )
 
 type UserService interface {
+	ListUser(page, limit int) (*userEntity.UserListResponse, error)
 	RegisterUser(user *userEntity.UserRegisterRequest) error
 	LoginUser(user *userEntity.UserLoginRequest) (string, error)
 	LoginStore(user *userEntity.UserLoginRequest) (string, error)
 	GetUserDetails(userID int) (*userEntity.UserDetailResponse, error)
-	GetStoreDetails(userID int) (*userEntity.StoreDetailResponse, error)
 	IsPhoneNumberExists(phone string) (bool, error)
 }
 
@@ -23,9 +23,12 @@ type userService struct {
 	userRepo userRepo.UserRepository
 }
 
-// GetStoreDetails implements UserService.
-func (s *userService) GetStoreDetails(userID int) (*userEntity.StoreDetailResponse, error) {
-	return s.userRepo.GetStoreByID(userID)
+func (s *userService) ListUser(page int, limit int) (*userEntity.UserListResponse, error) {
+	users, err := s.userRepo.List(page, limit)
+	if err != nil {
+		return &userEntity.UserListResponse{}, err
+	}
+	return users, nil
 }
 
 func (s *userService) LoginStore(user *userEntity.UserLoginRequest) (string, error) {
@@ -59,7 +62,7 @@ func (s *userService) IsPhoneNumberExists(phone string) (bool, error) {
 }
 
 func (s *userService) GetUserDetails(userID int) (*userEntity.UserDetailResponse, error) {
-	return s.userRepo.GetUserByID(userID)
+	return s.userRepo.Detail(userID)
 }
 
 func (s *userService) RegisterUser(user *userEntity.UserRegisterRequest) error {
@@ -67,7 +70,7 @@ func (s *userService) RegisterUser(user *userEntity.UserRegisterRequest) error {
 		return errors.New("invalid role")
 	}
 
-	return s.userRepo.RegisterUser(user)
+	return s.userRepo.Create(user)
 }
 
 func (s *userService) LoginUser(user *userEntity.UserLoginRequest) (string, error) {

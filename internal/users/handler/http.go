@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ghulammuzz/backend-parkerin/internal/middleware"
 	"github.com/ghulammuzz/backend-parkerin/internal/users/entity"
@@ -24,8 +26,9 @@ func (h *UserHandler) Router(r fiber.Router) {
 	r.Post("/user/register", h.RegisterUser)
 	r.Post("/user/login", h.LoginUser)
 	r.Post("/store/login", h.LoginStore)
-	r.Get("/user/dashboard", middleware.JWTProtected(), h.DashboardUser)
-	r.Get("/store/dashboard", middleware.JWTProtected(), h.DashboardStore)
+	r.Get("/users", h.ListUser)
+	r.Get("/users/:id", h.DetailUser)
+	r.Get("/user-dashboard", middleware.JWTProtected(), h.DashboardUser)
 }
 
 func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
@@ -46,8 +49,8 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 		return response.JSON(c, 400, "Phone number already registered", nil)
 	}
 	if user.Role == "store" {
-		if user.StoreName == nil || user.Address == nil || user.Latitude == nil || user.Longitude == nil {
-			return response.JSON(c, 400, "Validation failed", "store_name, address, latitude, and longitude are required for store role")
+		if user.StoreName == nil || user.Address == nil || user.Latitude == nil || user.Longitude == nil || user.WorkingHours == nil {
+			return response.JSON(c, 400, "Validation failed", "store_name, address, working_hours, latitude, and longitude are required for store role")
 		}
 	}
 
@@ -109,29 +112,38 @@ func (h *UserHandler) DashboardUser(c *fiber.Ctx) error {
 	})
 }
 
-func (h *UserHandler) DashboardStore(c *fiber.Ctx) error {
-	userToken := c.Locals("user").(*jwt.Token)
-
-	claims, ok := userToken.Claims.(jwt.MapClaims)
-	if !ok || !userToken.Valid {
-		return response.JSON(c, fiber.StatusUnauthorized, "Invalid token", nil)
+func (h *UserHandler) ListUser(c *fiber.Ctx) error {
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	limit, err := strconv.Atoi(c.Query("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 10 // default limit
 	}
 
-	userID := int(claims["user_id"].(float64))
+	// log.Debug(strconv.Itoa(page))
+	// log.Debug(strconv.Itoa(limit))
 
-	store, err := h.userService.GetStoreDetails(userID)
+	users, err := h.userService.ListUser(page, limit)
 	if err != nil {
-		return response.JSON(c, fiber.StatusInternalServerError, "Failed to fetch store details", err.Error())
+		return response.JSON(c, fiber.StatusInternalServerError, "Failed to retrieve user list", err.Error())
 	}
 
-	return response.JSON(c, fiber.StatusOK, "Store details", fiber.Map{
-		"store_id":     store.ID,
-		"name":         store.Name,
-		"phone_number": store.PhoneNumber,
-		"role":         store.Role,
-		"store_name":   store.StoreName,
-		"address":      store.Address,
-		"longitude":    store.Longitude,
-		"latitude":     store.Latitude,
-	})
+	return response.JSON(c, fiber.StatusOK, "User list retrieved successfully", users)
+}
+
+func (h *UserHandler) DetailUser(c *fiber.Ctx) error {
+	userIDStr := c.Params("id")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil || userID < 1 {
+		return response.JSON(c, fiber.StatusBadRequest, "Invalid user ID", nil)
+	}
+
+	userDetail, err := h.userService.GetUserDetails(userID)
+	if err != nil {
+		return response.JSON(c, fiber.StatusInternalServerError, "Failed to retrieve user details", err.Error())
+	}
+
+	return response.JSON(c, fiber.StatusOK, "user details retrieved successfully", userDetail)
 }

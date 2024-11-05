@@ -10,49 +10,76 @@ import (
 )
 
 type UserRepository interface {
-	RegisterUser(user *userEntity.UserRegisterRequest) error
-	GetUserByID(userID int) (*userEntity.UserDetailResponse, error)
-	GetStoreByID(userID int) (*userEntity.StoreDetailResponse, error)
+	List(page, limit int) (*userEntity.UserListResponse, error)
+	Create(user *userEntity.UserRegisterRequest) error
+	Detail(userID int) (*userEntity.UserDetailResponse, error)
 	LoginUser(user *userEntity.UserLoginRequest) (*userEntity.UserJWT, error)
 	LoginStore(user *userEntity.UserLoginRequest) (*userEntity.StoreJWT, error)
 	IsPhoneNumberExists(phoneNumber string) (bool, error)
+	IsUserIDValid(userID int) (bool, error)
 }
 
 type userRepository struct {
 	db *sql.DB
 }
 
-// GetStoreByID implements UserRepository.
-func (r *userRepository) GetStoreByID(userID int) (*userEntity.StoreDetailResponse, error) {
-	query := `
-		SELECT u.id, u.phone_number, u.name, u.password, u.role,
-		       s.store_name, s.address, s.latitude, s.longitude
-		FROM users u
-		JOIN stores s ON u.id = s.user_id
-		WHERE u.id = $1 AND u.role = 'store'
-	`
+func (r *userRepository) IsUserIDValid(userID int) (bool, error) {
+	query := "SELECT 1 FROM users WHERE id = $1 LIMIT 1"
 
-	storeDetail := &userEntity.StoreDetailResponse{}
+	row := r.db.QueryRow(query, userID)
+	var exists int
+	err := row.Scan(&exists)
+	// log.Debug("deb 1")
 
-	err := r.db.QueryRow(query, userID).Scan(
-		&storeDetail.ID,
-		&storeDetail.PhoneNumber,
-		&storeDetail.Name,
-		&storeDetail.Password,
-		&storeDetail.Role,
-		&storeDetail.StoreName,
-		&storeDetail.Address,
-		&storeDetail.Latitude,
-		&storeDetail.Longitude,
-	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.New("store not found")
+			// log.Debug("deb 2")
+			return false, nil
 		}
+		// log.Debug("deb 3")
+		return false, err
+	}
+	// log.Debug("deb 4")
+	return true, nil
+}
+
+func (r *userRepository) List(page int, limit int) (*userEntity.UserListResponse, error) {
+	offset := (page - 1) * limit
+	query := `
+		SELECT id, phone_number, name
+		FROM users
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2
+	`
+
+	rows, err := r.db.Query(query, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []userEntity.UserListSubResponse{}
+	for rows.Next() {
+		user := userEntity.UserListSubResponse{}
+		if err := rows.Scan(
+			&user.ID,
+			&user.PhoneNumber,
+			&user.Name,
+		); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return storeDetail, nil
+	return &userEntity.UserListResponse{
+		Users: users,
+		Page:  page,
+		Limit: limit,
+	}, nil
 }
 
 func (r *userRepository) LoginStore(user *userEntity.UserLoginRequest) (*userEntity.StoreJWT, error) {
@@ -105,7 +132,7 @@ func (r *userRepository) LoginUser(user *userEntity.UserLoginRequest) (*userEnti
 
 	return dbUser, nil
 }
-func (r *userRepository) RegisterUser(user *userEntity.UserRegisterRequest) error {
+func (r *userRepository) Create(user *userEntity.UserRegisterRequest) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -132,8 +159,8 @@ func (r *userRepository) RegisterUser(user *userEntity.UserRegisterRequest) erro
 	}
 
 	if user.Role == "store" {
-		storeQuery := `INSERT INTO stores (user_id, store_name, address, latitude, longitude, created_at) VALUES ($1, $2, $3, $4, $5, $6)`
-		_, err := tx.Exec(storeQuery, user.ID, user.StoreName, user.Address, user.Latitude, user.Longitude, user.CreatedAt)
+		storeQuery := `INSERT INTO stores (user_id, store_name, address, latitude, longitude, created_at, working_hours) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+		_, err := tx.Exec(storeQuery, user.ID, user.StoreName, user.Address, user.Latitude, user.Longitude, user.CreatedAt, user.WorkingHours)
 		if err != nil {
 			return err
 		}
@@ -142,7 +169,7 @@ func (r *userRepository) RegisterUser(user *userEntity.UserRegisterRequest) erro
 	return nil
 }
 
-func (r *userRepository) GetUserByID(userID int) (*userEntity.UserDetailResponse, error) {
+func (r *userRepository) Detail(userID int) (*userEntity.UserDetailResponse, error) {
 	user := &userEntity.UserDetailResponse{}
 	query := `SELECT id, name, phone_number, role FROM users WHERE id = $1`
 	err := r.db.QueryRow(query, userID).Scan(&user.ID, &user.Name, &user.PhoneNumber, &user.Role)

@@ -4,8 +4,11 @@ import (
 	"flag"
 
 	"github.com/ghulammuzz/backend-parkerin/config"
+	applicants "github.com/ghulammuzz/backend-parkerin/internal/applicants/di"
 	"github.com/ghulammuzz/backend-parkerin/internal/health"
+	store "github.com/ghulammuzz/backend-parkerin/internal/store/di"
 	users "github.com/ghulammuzz/backend-parkerin/internal/users/di"
+
 	"github.com/ghulammuzz/backend-parkerin/pkg/log"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -39,11 +42,14 @@ func main() {
 	defer db.Close()
 
 	app := fiber.New()
+	// app.Use(recover.New())
 
 	app.Get("/hc", health.HealthCheck(db))
 
 	api := app.Group("/api")
 	users.InitializedUsersService(db, config.Validate).Router(api)
+	store.InitializedStoreService(db).Router(api)
+	applicants.InitializedApplicationService(db).Router(api)
 
 	if err := app.Listen(":3000"); err != nil {
 		log.Error("Failed to start the server: %v", err)

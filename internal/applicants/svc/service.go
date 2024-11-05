@@ -3,7 +3,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 
 	appEntity "github.com/ghulammuzz/backend-parkerin/internal/applicants/entity"
 	appRepo "github.com/ghulammuzz/backend-parkerin/internal/applicants/repo"
@@ -65,7 +64,7 @@ func (s *applicationService) CreateApply(userID, storeID int, isDirectHire bool)
 	if err != nil {
 		return err
 	}
-	log.Debug(fmt.Sprint(isDirectHire))
+	// log.Debug(fmt.Sprint(isDirectHire))
 
 	return nil
 }

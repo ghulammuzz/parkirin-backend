@@ -39,7 +39,7 @@ func (r *applicationRepository) RejectedAllApplicantsByStoreID(storeID int) erro
 		return err
 	}
 	if rowsAffected == 0 {
-		return errors.New("no applications to reject or already rejected")
+		return nil
 	}
 
 	return nil

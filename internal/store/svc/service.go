@@ -11,7 +11,7 @@ import (
 )
 
 type StoreService interface {
-	ListStores(page, limit int) (entity.ListStoreResponse, error)
+	ListStores(page, limit int, isHiring bool) (entity.ListStoreResponse, error)
 	GetStoreDetail(id int) (*entity.DetailStoreResponse, error)
 	DashboardStore(userId int) (*entity.DashboardStoreResponse, error)
 	GetStoreIDByUserID(userID int) (int, error)
@@ -46,8 +46,8 @@ func (s *storeService) GetStoreIDByUserID(userID int) (int, error) {
 	return s.storeRepo.GetStoreIDByUserID(userID)
 }
 
-func (s *storeService) ListStores(page, limit int) (entity.ListStoreResponse, error) {
-	stores, err := s.storeRepo.List(page, limit)
+func (s *storeService) ListStores(page, limit int, isHiring bool) (entity.ListStoreResponse, error) {
+	stores, err := s.storeRepo.List(page, limit, isHiring)
 	if err != nil {
 		return entity.ListStoreResponse{}, err
 	}

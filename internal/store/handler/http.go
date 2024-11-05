@@ -39,10 +39,13 @@ func (h *StoreHandler) ListStores(c *fiber.Ctx) error {
 		limit = 10 // default limit
 	}
 
-	// log.Debug(strconv.Itoa(page))
-	// log.Debug(strconv.Itoa(limit))
+	isHiring, err := strconv.ParseBool(c.Query("isHiring", "false"))
+	if err != nil {
+		return response.JSON(c, fiber.StatusBadRequest, "Invalid isHiring parameter", nil)
+	}
+	// log.Debug(strconv.FormatBool(isHiring))
 
-	stores, err := h.storeService.ListStores(page, limit)
+	stores, err := h.storeService.ListStores(page, limit, isHiring)
 	if err != nil {
 		return response.JSON(c, fiber.StatusInternalServerError, "Failed to retrieve store list", err.Error())
 	}

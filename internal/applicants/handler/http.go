@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/dgrijalva/jwt-go"
@@ -10,7 +9,6 @@ import (
 	"github.com/ghulammuzz/backend-parkerin/internal/middleware"
 
 	storeService "github.com/ghulammuzz/backend-parkerin/internal/store/svc"
-	"github.com/ghulammuzz/backend-parkerin/pkg/log"
 	"github.com/ghulammuzz/backend-parkerin/pkg/response"
 	"github.com/gofiber/fiber/v2"
 )
@@ -112,7 +110,7 @@ func (h *ApplicationHandler) ReviewApplicationsStore(c *fiber.Ctx) error {
 	if err != nil {
 		return response.JSON(c, 400, "invalid user ID", nil)
 	}
-	log.Debug(fmt.Sprint(storeID))
+	// log.Debug(fmt.Sprint(storeID))
 
 	applications, err := h.appService.ReviewApplications(storeID)
 	if err != nil {
@@ -201,7 +199,7 @@ func (h *ApplicationHandler) UpdateApplicationStoreStatus(c *fiber.Ctx) error {
 	}
 
 	storeID, err := h.storeService.GetStoreIDByUserID(userID)
-	log.Debug(fmt.Sprint(storeID))
+	// log.Debug(fmt.Sprint(storeID))
 	if err != nil {
 		return response.JSON(c, 400, "invalid user ID", nil)
 	}

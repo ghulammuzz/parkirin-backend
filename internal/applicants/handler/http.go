@@ -27,8 +27,9 @@ func (h *ApplicationHandler) Router(r fiber.Router) {
 	r.Post("/apply-user/:userID", middleware.JWTProtected(), h.ApplyUser)
 	r.Get("/application/store", middleware.JWTProtected(), h.ReviewApplicationsStore)
 	r.Get("/application/user", middleware.JWTProtected(), h.ReviewApplicationsUser)
-	r.Put("/status-apply-user", middleware.JWTProtected(), h.UpdateApplicationUserStatus)
-	r.Put("/status-apply-store", middleware.JWTProtected(), h.UpdateApplicationStoreStatus)
+	// need test
+	r.Put("/status-apply-user/:appID", middleware.JWTProtected(), h.UpdateApplicationUserStatus)
+	r.Put("/status-apply-store/:appID", middleware.JWTProtected(), h.UpdateApplicationStoreStatus)
 }
 
 // us (using jwt)
@@ -208,6 +209,8 @@ func (h *ApplicationHandler) UpdateApplicationStoreStatus(c *fiber.Ctx) error {
 	if status != "accepted" && status != "rejected" {
 		return response.JSON(c, 400, "invalid status; must be 'accepted' or 'rejected'", nil)
 	}
+	// log.Debug(fmt.Sprint(status))
+	// log.Debug(fmt.Sprint(appID))
 
 	if status == "accepted" {
 		if err := h.appService.AcceptApplicationStore(appID, storeID); err != nil {

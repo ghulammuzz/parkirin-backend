@@ -82,11 +82,11 @@ func (s *applicationService) RejectApplicationUser(appID, userID int) error {
 }
 
 func (s *applicationService) AcceptApplicationStore(appID, storeID int) error {
-	return s.appRepo.UpdateApplicationStatusUser(appID, storeID, "accepted")
+	return s.appRepo.UpdateApplicationStatusStore(appID, storeID, "accepted")
 }
 
 func (s *applicationService) RejectApplicationStore(appID, storeID int) error {
-	return s.appRepo.UpdateApplicationStatusUser(appID, storeID, "rejected")
+	return s.appRepo.UpdateApplicationStatusStore(appID, storeID, "rejected")
 }
 
 func NewApplicationService(appRepo appRepo.ApplicationRepository, storeRepo storeRepo.StoreRepository, userRepo userRepo.UserRepository) ApplicationService {

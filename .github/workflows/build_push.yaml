@@ -1,0 +1,62 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract commit hash
+        id: commit_info
+        run: echo "::set-output name=commit_hash::$(git rev-parse --short HEAD)"
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/backend-parkirin:${{ steps.commit_info.outputs.commit_hash }}
+          file: deployment/Dockerfile.stg
+
+      - name: Set Docker Image
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          curl -X POST ${{  secrets.SAVE_URI  }} \
+          -H "Authorization: Bearer $API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "dockerImage": "${{ secrets.DOCKER_USERNAME }}/backend-parkirin:${{ steps.commit_info.outputs.commit_hash }}",
+            "applicationId": "${{ secrets.APP_ID }}",
+            "username": "${{ secrets.DOCKER_USERNAME }}",
+            "password": "${{ secrets.DOCKER_PASSWORD }}"
+          }'
+        if: success()
+
+      - name: Deploy to Stg
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          curl -X POST ${{  secrets.DEPLOY_URI  }} \
+          -H "Authorization: Bearer $API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+              "applicationId": "${{ secrets.APP_ID }}"
+              }'
+        if: success()

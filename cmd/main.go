@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"os"
 
 	"github.com/ghulammuzz/backend-parkerin/config"
 	applicants "github.com/ghulammuzz/backend-parkerin/internal/applicants/di"
@@ -51,7 +53,7 @@ func main() {
 	store.InitializedStoreService(db).Router(api)
 	applicants.InitializedApplicationService(db).Router(api)
 
-	if err := app.Listen(":3000"); err != nil {
+	if err := app.Listen(fmt.Sprint(":", os.Getenv("APP_PORT"))); err != nil {
 		log.Error("Failed to start the server: %v", err)
 	}
 

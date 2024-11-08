@@ -145,7 +145,7 @@ func (r *userRepository) Create(user *userEntity.UserRegisterRequest) error {
 		}
 	}()
 
-	query := `INSERT INTO users (phone_number, name, password, role, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	query := `INSERT INTO users (phone_number, name, password, role, is_verified, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
 	user.CreatedAt = time.Now().UnixMilli()
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
@@ -153,7 +153,7 @@ func (r *userRepository) Create(user *userEntity.UserRegisterRequest) error {
 		return err
 	}
 
-	err = tx.QueryRow(query, user.PhoneNumber, user.Name, string(hashedPassword), user.Role, user.CreatedAt).Scan(&user.ID)
+	err = tx.QueryRow(query, user.PhoneNumber, user.Name, string(hashedPassword), user.Role, user.IsVerified, user.CreatedAt).Scan(&user.ID)
 	if err != nil {
 		return err
 	}

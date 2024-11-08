@@ -15,10 +15,37 @@ type StoreRepository interface {
 	GetStoreIDByUserID(userID int) (int, error)
 	UpdateIsHiring(isHiring bool, storeID int) error
 	IsStoreIDValid(storeID int) (bool, error)
+	UploadStoreIMG(storeID int, img string) error
+	VerifiedStore(storeID int) error
 }
 
 type storeRepository struct {
 	db *sql.DB
+}
+
+func (r *storeRepository) VerifiedStore(storeID int) error {
+	query := `
+		UPDATE users
+		SET is_verified = true
+		FROM stores
+		WHERE stores.id = $1
+		AND stores.user_id = users.id
+	`
+	_, err := r.db.Exec(query, storeID)
+	if err != nil {
+		return fmt.Errorf("failed to update user verification status: %w", err)
+	}
+	return nil
+}
+
+
+func (r *storeRepository) UploadStoreIMG(storeID int, img string) error {
+	query := `UPDATE stores SET url_image = $1 WHERE id = $2`
+	_, err := r.db.Exec(query, img, storeID)
+	if err != nil {
+		return fmt.Errorf("failed to update store image: %w", err)
+	}
+	return nil
 }
 
 func (r *storeRepository) IsStoreIDValid(storeID int) (bool, error) {
@@ -63,9 +90,11 @@ func (s *storeRepository) GetStoreIDByUserID(userID int) (int, error) {
 
 func (s *storeRepository) DetailByUserID(id int) (*storeEntity.DetailStoreResponse, error) {
 	query := `
-		SELECT id, user_id, store_name, address, latitude, longitude, working_hours, is_hiring, is_paid, created_at
-		FROM stores
-		WHERE user_id = $1
+		SELECT s.id, s.user_id, s.store_name, s.address, s.latitude, s.longitude, 
+		       s.working_hours, s.is_hiring, s.is_paid, u.is_verified, s.created_at
+		FROM stores s
+		JOIN users u ON s.user_id = u.id
+		WHERE s.user_id = $1
 	`
 
 	storeDetail := &storeEntity.DetailStoreResponse{}
@@ -79,6 +108,7 @@ func (s *storeRepository) DetailByUserID(id int) (*storeEntity.DetailStoreRespon
 		&storeDetail.WorkingHours,
 		&storeDetail.IsHiring,
 		&storeDetail.IsPaid,
+		&storeDetail.IsVerified,
 		&storeDetail.CreatedAt,
 	)
 	if err != nil {

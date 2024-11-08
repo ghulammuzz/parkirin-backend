@@ -29,6 +29,7 @@ type DashboardStoreResponse struct {
 	IsHiring     bool                          `json:"is_hiring"`
 	IsPaid       bool                          `json:"is_paid"`
 	CreatedAt    int64                         `json:"created_at"`
+	IsVerified   bool                          `json:"is_verified"`
 }
 
 type DetailStoreResponse struct {
@@ -39,8 +40,9 @@ type DetailStoreResponse struct {
 	Latitude     float64 `json:"latitude"`
 	Longitude    float64 `json:"longitude"`
 	WorkingHours string  `json:"working_hours"`
-	IsHiring     bool    `json:"is_hiring"`
 	IsPaid       bool    `json:"is_paid"`
+	IsVerified   bool    `json:"is_verified"`
+	IsHiring     bool    `json:"is_hiring"`
 	CreatedAt    int64   `json:"created_at"`
 }
 

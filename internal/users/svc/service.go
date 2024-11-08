@@ -69,6 +69,9 @@ func (s *userService) RegisterUser(user *userEntity.UserRegisterRequest) error {
 	if user.Role != "tukang" && user.Role != "store" {
 		return errors.New("invalid role")
 	}
+	if user.Role == "tukang" {
+		user.IsVerified = true
+	}
 
 	return s.userRepo.Create(user)
 }

@@ -52,7 +52,7 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 		if user.StoreName == nil || user.Address == nil || user.Latitude == nil || user.Longitude == nil || user.WorkingHours == nil {
 			return response.JSON(c, 400, "Validation failed", "store_name, address, working_hours, latitude, and longitude are required for store role")
 		}
-	}
+	} 
 
 	if err := h.userService.RegisterUser(user); err != nil {
 		return response.JSON(c, 500, "register svc error", err.Error())
@@ -71,6 +71,15 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 	if err != nil {
 		return response.JSON(c, 401, "Login failed", err.Error())
 	}
+
+	// c.Cookie(&fiber.Cookie{
+	// 	Name:     "auth_token",
+	// 	Value:    token,
+	// 	Expires:  time.Now().Add(24 * time.Hour),
+	// 	HTTPOnly: true,
+	// 	Secure:   true,
+	// 	SameSite: "Strict",
+	// })
 
 	return response.JSON(c, 200, "Login successful", token)
 }

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/dgrijalva/jwt-go"
@@ -26,7 +27,7 @@ func (h *StoreHandler) Router(r fiber.Router) {
 	r.Get("/store/:id", h.GetStoreDetail)
 	r.Get("/store-dashboard", middleware.JWTProtected(), h.DashboardStore)
 	r.Put("/store-hiring", middleware.JWTProtected(), h.UpdateIsHiringHandler)
-
+	r.Post("/store-img", middleware.JWTProtected(), h.UplaodStoreIMGHandler)
 }
 
 func (h *StoreHandler) ListStores(c *fiber.Ctx) error {
@@ -115,4 +116,39 @@ func (h *StoreHandler) UpdateIsHiringHandler(c *fiber.Ctx) error {
 
 	return response.JSON(c, 200, "Success Updated", nil)
 
+}
+func (h *StoreHandler) UplaodStoreIMGHandler(c *fiber.Ctx) error {
+
+	userToken := c.Locals("user").(*jwt.Token)
+
+	claims, ok := userToken.Claims.(jwt.MapClaims)
+	if !ok || !userToken.Valid {
+		return response.JSON(c, fiber.StatusUnauthorized, "Invalid token", nil)
+	}
+
+	userID := int(claims["user_id"].(float64))
+
+	storeID, err := h.storeService.GetStoreIDByUserID(userID)
+	if err != nil {
+		return response.JSON(c, 400, "invalid user ID", nil)
+	}
+	log.Debug(fmt.Sprint(storeID))
+
+	img, err := c.FormFile("img")
+	if err != nil {
+		log.Error("Error getting img", slog.String("error", err.Error()))
+		return response.JSON(c, 400, "img file is required", err.Error())
+	}
+
+	const maxSize = 2 * 1024 * 1024
+	if img.Size > maxSize {
+		return response.JSON(c, 400, "Image size exceeds 2 MB", nil)
+	}
+
+	err = h.storeService.UploadStoreIMG(storeID, img)
+	if err != nil {
+		return response.JSON(c, 500, "error svc upload img", err.Error())
+	}
+
+	return response.JSON(c, 200, "img uploaded", nil)
 }

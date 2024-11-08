@@ -10,6 +10,7 @@ import (
 
 type ApplicationRepository interface {
 	Apply(userID, storeID int, isDirectHire bool) error
+	Detail(appID int) (appEntity.ApplicationUserResponseDetail, error)
 	GetApplicationsByStore(storeID int) ([]appEntity.ApplicationResponse, error)
 	GetApplicationsByUser(userID int, isDirectHire bool) ([]appEntity.ApplicationUserResponse, error)
 	UpdateApplicationStatusUser(appID, userID int, status string) error
@@ -20,6 +21,10 @@ type ApplicationRepository interface {
 
 type applicationRepository struct {
 	db *sql.DB
+}
+
+func (r *applicationRepository) Detail(appID int) (appEntity.ApplicationUserResponseDetail, error) {
+	panic("unimplemented")
 }
 
 func (r *applicationRepository) RejectedAllApplicantsByStoreID(storeID int) error {

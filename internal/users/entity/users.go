@@ -13,6 +13,7 @@ type UserRegisterRequest struct {
 	Latitude     *float64 `json:"latitude,omitempty" validate:"omitempty"`
 	Longitude    *float64 `json:"longitude,omitempty" validate:"omitempty"`
 	WorkingHours *string  `json:"working_hours,omitempty" validate:"omitempty,min=5,max=100"`
+	IsVerified   bool     `json:"is_verified"`
 }
 
 // -7.968437, 112.596530

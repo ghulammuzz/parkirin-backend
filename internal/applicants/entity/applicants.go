@@ -12,6 +12,7 @@ type Application struct {
 
 type ApplicationResponse struct {
 	ID       int    `json:"id"`
+	UserID   int    `json:"user_id"`
 	UserName string `json:"user_name"`
 	Status   string `json:"status"`
 }

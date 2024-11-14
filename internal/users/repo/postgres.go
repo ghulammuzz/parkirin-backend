@@ -48,6 +48,7 @@ func (r *userRepository) List(page int, limit int) (*userEntity.UserListResponse
 	query := `
 		SELECT id, phone_number, name
 		FROM users
+		WHERE role = 'tukang'
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
 	`

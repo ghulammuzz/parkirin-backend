@@ -155,7 +155,7 @@ func (s *storeRepository) Detail(id int) (*storeEntity.DetailStoreResponse, erro
 func (s *storeRepository) List(page, limit int, isHiring bool) (storeEntity.ListStoreResponse, error) {
 	offset := (page - 1) * limit
 	query := `
-		SELECT id, user_id, store_name, address, working_hours, is_hiring, is_paid
+		SELECT id, user_id, store_name, address, working_hours, url_image, is_hiring, is_paid
 		FROM stores WHERE is_hiring = $1
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3
@@ -176,6 +176,7 @@ func (s *storeRepository) List(page, limit int, isHiring bool) (storeEntity.List
 			&store.StoreName,
 			&store.Address,
 			&store.WorkingHours,
+			&store.UrlImage,
 			&store.IsHiring,
 			&store.IsPaid,
 		); err != nil {

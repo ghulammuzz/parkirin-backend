@@ -7,6 +7,7 @@ type ListStoreSubResponse struct {
 	UserID       int    `json:"user_id"`
 	StoreName    string `json:"store_name"`
 	Address      string `json:"address"`
+	UrlImage     string `json:"url_image"`
 	WorkingHours string `json:"working_hours"`
 	IsHiring     bool   `json:"is_hiring"`
 	IsPaid       bool   `json:"is_paid"`

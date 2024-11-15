@@ -3,6 +3,7 @@ package repo
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	appEntity "github.com/ghulammuzz/backend-parkerin/internal/applicants/entity"
@@ -17,6 +18,7 @@ type ApplicationRepository interface {
 	UpdateApplicationStatusStore(appID, storeID int, status string) error
 	CheckApplicantsAlreadyExist(userID, storeID int) (bool, error)
 	RejectedAllApplicantsByStoreID(storeID int) error
+	DeleteApplicantsByUserIDAppsID(userID int, appsID int) error
 }
 
 type applicationRepository struct {
@@ -25,6 +27,19 @@ type applicationRepository struct {
 
 func (r *applicationRepository) Detail(appID int) (appEntity.ApplicationUserResponseDetail, error) {
 	panic("unimplemented")
+}
+
+func (r *applicationRepository) DeleteApplicantsByUserIDAppsID(userID int, appsID int) error {
+	query := `
+		DELETE from applications
+		WHERE id = $1 AND tukang_id = $2
+	`
+	_, err := r.db.Exec(query, appsID, userID)
+	if err != nil {
+		return fmt.Errorf("failed to delete applicants by userID and appsID: %w", err)
+	}
+
+	return nil
 }
 
 func (r *applicationRepository) RejectedAllApplicantsByStoreID(storeID int) error {

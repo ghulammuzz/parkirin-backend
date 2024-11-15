@@ -30,6 +30,7 @@ func (h *ApplicationHandler) Router(r fiber.Router) {
 	// need test
 	r.Put("/status-apply-user/:appID", middleware.JWTProtected(), h.UpdateApplicationUserStatus)
 	r.Put("/status-apply-store/:appID", middleware.JWTProtected(), h.UpdateApplicationStoreStatus)
+	r.Delete("/applicants/:appID", middleware.JWTProtected(), h.DeleteAppsInUserHandler)
 }
 
 // us (using jwt)
@@ -223,4 +224,28 @@ func (h *ApplicationHandler) UpdateApplicationStoreStatus(c *fiber.Ctx) error {
 		}
 		return response.JSON(c, 200, "Application rejected", nil)
 	}
+}
+
+func (h *ApplicationHandler) DeleteAppsInUserHandler(c *fiber.Ctx) error {
+
+	userToken := c.Locals("user").(*jwt.Token)
+
+	claims, ok := userToken.Claims.(jwt.MapClaims)
+	if !ok || !userToken.Valid {
+		return response.JSON(c, fiber.StatusUnauthorized, "Invalid token", nil)
+	}
+
+	userID := int(claims["user_id"].(float64))
+
+	appID, err := strconv.Atoi(c.Params("appID"))
+	if err != nil {
+		return response.JSON(c, 400, "invalid app id", nil)
+	}
+
+	err = h.appService.DeleteAppsInUser(userID, appID)
+	if err != nil {
+		return response.JSON(c, 500, "error svc delete apps", nil)
+	}
+
+	return response.JSON(c, 200, "success delete apps ", nil)
 }

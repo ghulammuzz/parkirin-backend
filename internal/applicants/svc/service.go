@@ -20,12 +20,17 @@ type ApplicationService interface {
 	RejectApplicationUser(appID, userID int) error
 	AcceptApplicationStore(appID, storeID int) error
 	RejectApplicationStore(appID, storeID int) error
+	DeleteAppsInUser(userID, appID int) error
 }
 
 type applicationService struct {
 	appRepo   appRepo.ApplicationRepository
 	storeRepo storeRepo.StoreRepository
 	userRepo  userRepo.UserRepository
+}
+
+func (s *applicationService) DeleteAppsInUser(userID, appID int) error {
+	return s.appRepo.DeleteApplicantsByUserIDAppsID(userID, appID)
 }
 
 func (s *applicationService) ReviewApplicationsUser(userID int, isDirectHire bool) ([]appEntity.ApplicationUserResponse, error) {

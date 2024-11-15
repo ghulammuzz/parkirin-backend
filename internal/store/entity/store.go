@@ -23,6 +23,7 @@ type DashboardStoreResponse struct {
 	User         userEntity.UserDetailResponse `json:"user"`
 	StoreName    string                        `json:"store_name"`
 	Address      string                        `json:"address"`
+	UrlImage     string                        `json:"url_image"`
 	Latitude     float64                       `json:"latitude"`
 	Longitude    float64                       `json:"longitude"`
 	WorkingHours string                        `json:"working_hours"`
@@ -37,6 +38,7 @@ type DetailStoreResponse struct {
 	UserID       int     `json:"user_id"`
 	StoreName    string  `json:"store_name"`
 	Address      string  `json:"address"`
+	UrlImage     string  `json:"url_image"`
 	Latitude     float64 `json:"latitude"`
 	Longitude    float64 `json:"longitude"`
 	WorkingHours string  `json:"working_hours"`

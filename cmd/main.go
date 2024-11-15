@@ -43,7 +43,9 @@ func main() {
 	}
 	defer db.Close()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		DisableStartupMessage: true,
+	})
 	// app.Use(recover.New())
 
 	app.Get("/hc", health.HealthCheck(db))

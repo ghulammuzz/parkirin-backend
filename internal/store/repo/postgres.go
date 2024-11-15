@@ -90,7 +90,7 @@ func (s *storeRepository) GetStoreIDByUserID(userID int) (int, error) {
 
 func (s *storeRepository) DetailByUserID(id int) (*storeEntity.DetailStoreResponse, error) {
 	query := `
-		SELECT s.id, s.user_id, s.store_name, s.address, s.latitude, s.longitude, 
+		SELECT s.id, s.user_id, s.store_name, s.url_image, s.address, s.latitude, s.longitude, 
 		       s.working_hours, s.is_hiring, s.is_paid, u.is_verified, s.created_at
 		FROM stores s
 		JOIN users u ON s.user_id = u.id
@@ -102,6 +102,7 @@ func (s *storeRepository) DetailByUserID(id int) (*storeEntity.DetailStoreRespon
 		&storeDetail.ID,
 		&storeDetail.UserID,
 		&storeDetail.StoreName,
+		&storeDetail.UrlImage,
 		&storeDetail.Address,
 		&storeDetail.Latitude,
 		&storeDetail.Longitude,

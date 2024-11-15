@@ -103,6 +103,7 @@ func (s *storeService) DashboardStore(id int) (*entity.DashboardStoreResponse, e
 		User:         *user,
 		StoreName:    store.StoreName,
 		Address:      store.Address,
+		UrlImage:     store.UrlImage,
 		Latitude:     store.Latitude,
 		Longitude:    store.Longitude,
 		WorkingHours: store.WorkingHours,

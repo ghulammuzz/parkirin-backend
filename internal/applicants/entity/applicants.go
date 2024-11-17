@@ -18,10 +18,13 @@ type ApplicationResponse struct {
 }
 
 type ApplicationUserResponse struct {
-	ID        int    `json:"id"`
-	StoreName string `json:"store_name"`
-	Address   string `json:"address"`
-	Status    string `json:"status"`
+	ID           int    `json:"id"`
+	StoreID      int    `json:"store_id"`
+	StoreName    string `json:"store_name"`
+	Address      string `json:"address"`
+	UrlImage     string `json:"url_image"`
+	WorkingHours string `json:"working_hours"`
+	Status       string `json:"status"`
 }
 
 type ApplicationUserResponseDetail struct {

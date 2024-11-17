@@ -38,7 +38,6 @@ func (r *storeRepository) VerifiedStore(storeID int) error {
 	return nil
 }
 
-
 func (r *storeRepository) UploadStoreIMG(storeID int, img string) error {
 	query := `UPDATE stores SET url_image = $1 WHERE id = $2`
 	_, err := r.db.Exec(query, img, storeID)
@@ -124,7 +123,7 @@ func (s *storeRepository) DetailByUserID(id int) (*storeEntity.DetailStoreRespon
 
 func (s *storeRepository) Detail(id int) (*storeEntity.DetailStoreResponse, error) {
 	query := `
-		SELECT id, user_id, store_name, address, latitude, longitude, working_hours, is_hiring, is_paid, created_at
+		SELECT id, user_id, store_name, address, latitude, longitude, working_hours, url_image, is_hiring, is_paid, created_at
 		FROM stores
 		WHERE id = $1
 	`
@@ -138,6 +137,7 @@ func (s *storeRepository) Detail(id int) (*storeEntity.DetailStoreResponse, erro
 		&storeDetail.Latitude,
 		&storeDetail.Longitude,
 		&storeDetail.WorkingHours,
+		&storeDetail.UrlImage,
 		&storeDetail.IsHiring,
 		&storeDetail.IsPaid,
 		&storeDetail.CreatedAt,

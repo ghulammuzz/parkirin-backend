@@ -47,6 +47,7 @@ type DetailStoreResponse struct {
 	IsVerified   bool    `json:"is_verified"`
 	IsHiring     bool    `json:"is_hiring"`
 	CreatedAt    int64   `json:"created_at"`
+	ImageURL     string  `json:"image_url"`
 }
 
 type UpdateIsHiringRequest struct {

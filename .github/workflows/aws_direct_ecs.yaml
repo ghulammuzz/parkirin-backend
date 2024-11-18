@@ -1,0 +1,63 @@
+name: Build, Push Docker Image to ECR, Update ECS Task Definition & Deploy
+
+on:
+  push:
+    branches:
+      - aws
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  IMAGE_TAG: ${{ github.sha }}
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+  TASK_DEFINITION_FAMILY: ${{ secrets.TASK_DEFINITION_FAMILY }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      run: |
+        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REPOSITORY }}
+
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
+        docker tag ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} ${{ env.ECR_REPOSITORY }}:latest
+
+    - name: Push Docker image to ECR
+      run: |
+        docker push ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        docker push ${{ env.ECR_REPOSITORY }}:latest
+
+    - name: Retrieve current ECS Task Definition
+      run: |
+        aws ecs describe-task-definition --task-definition ${{ env.TASK_DEFINITION_FAMILY }} > task_definition.json
+
+    - name: Update ECS Task Definition with new image
+      run: |
+        IMAGE_URI="${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}"
+        sed -e "s|\"image\": \".*\"|\"image\": \"$IMAGE_URI\"|" task_definition.json > new_task_definition.json
+        aws ecs register-task-definition \
+          --cli-input-json file://new_task_definition.json
+
+    - name: Update ECS Service to use the new Task Definition
+      run: |
+        NEW_TASK_DEF_ARN=$(aws ecs describe-task-definition --task-definition ${{ env.TASK_DEFINITION_FAMILY }} | jq -r ".taskDefinition.taskDefinitionArn")
+        aws ecs update-service \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE }} \
+          --task-definition $NEW_TASK_DEF_ARN \
+          --force-new-deployment

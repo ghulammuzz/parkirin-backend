@@ -10,7 +10,7 @@ func HealthCheck(db *sql.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if err := db.Ping(); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"status":  "error",
+				"status":  "database error",
 				"message": "Database connection failed",
 				"error":   err.Error(),
 			})

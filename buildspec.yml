@@ -1,0 +1,41 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: ${{ secrets.AWS_REGION }}
+    ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+
+phases:
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - echo "Starting installation..."
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
+
+  pre_build:
+    commands:
+      - echo "Pulling base image to ensure cache usage..."
+      - docker pull $ECR_REPOSITORY:latest || true
+      - echo "Determining commit hash..."
+      - export IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+
+  build:
+    commands:
+      - echo "Building Docker image..."
+      - docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+      - docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REPOSITORY:latest
+
+  post_build:
+    commands:
+      - echo "Pushing Docker image to Amazon ECR..."
+      - docker push $ECR_REPOSITORY:$IMAGE_TAG
+      - docker push $ECR_REPOSITORY:latest
+      - echo "Build and push completed successfully."
+
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: yes
+  base-directory: .

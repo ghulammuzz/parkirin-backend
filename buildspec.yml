@@ -11,8 +11,6 @@ phases:
       golang: 1.22
     commands:
       - echo "Starting installation..."
-      - echo "Installing Docker..."
-      - curl -fsSL https://get.docker.com | sh
       - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
 

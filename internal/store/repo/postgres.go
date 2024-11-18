@@ -123,9 +123,22 @@ func (s *storeRepository) DetailByUserID(id int) (*storeEntity.DetailStoreRespon
 
 func (s *storeRepository) Detail(id int) (*storeEntity.DetailStoreResponse, error) {
 	query := `
-		SELECT id, user_id, store_name, address, latitude, longitude, working_hours, url_image, is_hiring, is_paid, created_at
-		FROM stores
-		WHERE id = $1
+		SELECT 
+			st.id, 
+			st.user_id, 
+			st.store_name, 
+			st.address, 
+			st.latitude, 
+			st.longitude, 
+			st.working_hours, 
+			st.url_image, 
+			st.is_hiring, 
+			st.is_paid, 
+			st.created_at,
+			u.phone_number
+		FROM stores st
+		JOIN users u ON st.user_id = u.id
+		WHERE st.id = $1
 	`
 
 	storeDetail := &storeEntity.DetailStoreResponse{}
@@ -141,6 +154,7 @@ func (s *storeRepository) Detail(id int) (*storeEntity.DetailStoreResponse, erro
 		&storeDetail.IsHiring,
 		&storeDetail.IsPaid,
 		&storeDetail.CreatedAt,
+		&storeDetail.PhoneNumber,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -151,6 +165,7 @@ func (s *storeRepository) Detail(id int) (*storeEntity.DetailStoreResponse, erro
 
 	return storeDetail, nil
 }
+
 
 func (s *storeRepository) List(page, limit int, isHiring bool) (storeEntity.ListStoreResponse, error) {
 	offset := (page - 1) * limit

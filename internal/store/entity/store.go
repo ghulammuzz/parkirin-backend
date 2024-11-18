@@ -42,6 +42,7 @@ type DetailStoreResponse struct {
 	UrlImage     string  `json:"url_image"`
 	Latitude     float64 `json:"latitude"`
 	Longitude    float64 `json:"longitude"`
+	PhoneNumber  string  `json:"phone_number"`
 	WorkingHours string  `json:"working_hours"`
 	IsPaid       bool    `json:"is_paid"`
 	IsVerified   bool    `json:"is_verified"`

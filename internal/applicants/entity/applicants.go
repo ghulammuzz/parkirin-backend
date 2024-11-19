@@ -21,6 +21,7 @@ type ApplicationUserResponse struct {
 	ID           int    `json:"id"`
 	StoreID      int    `json:"store_id"`
 	StoreName    string `json:"store_name"`
+	IsHiring     bool   `json:"is_hiring"`
 	Address      string `json:"address"`
 	UrlImage     string `json:"url_image"`
 	WorkingHours string `json:"working_hours"`

@@ -127,7 +127,7 @@ func (r *applicationRepository) GetApplicationsByStore(storeID int) ([]appEntity
 
 func (r *applicationRepository) GetApplicationsByUser(userID int, isDirectHire bool) ([]appEntity.ApplicationUserResponse, error) {
 	query := `
-		SELECT a.id, s.id, s.store_name, s.address, s.working_hours, s.url_image, a.status
+		SELECT a.id, s.id, s.store_name, s.is_hiring, s.address, s.working_hours, s.url_image, a.status
 		FROM applications a
 		JOIN stores s ON a.store_id = s.id
 		WHERE a.tukang_id = $1 and a.is_direct_hire = $2
@@ -141,7 +141,7 @@ func (r *applicationRepository) GetApplicationsByUser(userID int, isDirectHire b
 	var applications []appEntity.ApplicationUserResponse
 	for rows.Next() {
 		var app appEntity.ApplicationUserResponse
-		if err := rows.Scan(&app.ID, &app.StoreID, &app.StoreName, &app.Address, &app.WorkingHours, &app.UrlImage, &app.Status); err != nil {
+		if err := rows.Scan(&app.ID, &app.StoreID, &app.StoreName, &app.IsHiring, &app.Address, &app.WorkingHours, &app.UrlImage, &app.Status); err != nil {
 			return nil, err
 		}
 		applications = append(applications, app)

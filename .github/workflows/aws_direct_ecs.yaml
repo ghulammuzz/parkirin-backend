@@ -45,6 +45,7 @@ jobs:
     - name: Retrieve current ECS Task Definition
       run: |
         aws ecs describe-task-definition --task-definition ${{ env.TASK_DEFINITION_FAMILY }} > task_definition.json
+        cat task_definition.json
 
     - name: Update ECS Task Definition with new image
       run: |

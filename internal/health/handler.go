@@ -18,7 +18,7 @@ func HealthCheck(db *sql.DB) fiber.Handler {
 
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"status":  "ok",
-			"message": "Service is healthyyyy #2",
+			"message": "Service is healthyyyy #3",
 		})
 	}
 }

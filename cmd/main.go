@@ -36,17 +36,16 @@ func init() {
 }
 
 func main() {
-
 	db, err := config.InitPostgres()
 	if err != nil {
 		log.Error("Failed to initialize database: %v", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 	})
-	// app.Use(recover.New())
 
 	app.Get("/hc", health.HealthCheck(db))
 
@@ -58,5 +57,4 @@ func main() {
 	if err := app.Listen(fmt.Sprint(":", os.Getenv("APP_PORT"))); err != nil {
 		log.Error("Failed to start the server: %v", err)
 	}
-
 }

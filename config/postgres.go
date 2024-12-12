@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	dbInstance *sql.DB
-	once       sync.Once
-	initErr    error
+	dbInstance   *sql.DB
+	oncePostgres sync.Once
+	initErr      error
 )
 
 func InitPostgres() (*sql.DB, error) {
-	once.Do(func() {
+	oncePostgres.Do(func() {
 		host := os.Getenv("PG_HOST")
 		port := os.Getenv("PG_PORT")
 		user := os.Getenv("PG_USER")

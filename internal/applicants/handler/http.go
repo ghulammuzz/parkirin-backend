@@ -27,7 +27,6 @@ func (h *ApplicationHandler) Router(r fiber.Router) {
 	r.Post("/apply-user/:userID", middleware.JWTProtected(), h.ApplyUser)
 	r.Get("/application/store", middleware.JWTProtected(), h.ReviewApplicationsStore)
 	r.Get("/application/user", middleware.JWTProtected(), h.ReviewApplicationsUser)
-	// need test
 	r.Put("/status-apply-user/:appID", middleware.JWTProtected(), h.UpdateApplicationUserStatus)
 	r.Put("/status-apply-store/:appID", middleware.JWTProtected(), h.UpdateApplicationStoreStatus)
 	r.Delete("/applicants/:appID", middleware.JWTProtected(), h.DeleteAppsInUserHandler)

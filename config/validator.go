@@ -1,10 +1,20 @@
 package config
 
-import "github.com/go-playground/validator/v10"
+import (
+	"sync"
 
-var Validate *validator.Validate
+	"github.com/go-playground/validator/v10"
+)
+
+var (
+	Validate      *validator.Validate
+	onceValidator sync.Once
+)
 
 func InitValidator() {
-	o := validator.New()
-	Validate = o
+	onceValidator.Do(func() {
+		o := validator.New()
+		Validate = o
+	})
+
 }

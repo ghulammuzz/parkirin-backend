@@ -7,12 +7,12 @@ import (
 
 	"github.com/ghulammuzz/backend-parkerin/config"
 	applicants "github.com/ghulammuzz/backend-parkerin/internal/applicants/di"
-	"github.com/ghulammuzz/backend-parkerin/internal/health"
+	health "github.com/ghulammuzz/backend-parkerin/internal/health"
 	store "github.com/ghulammuzz/backend-parkerin/internal/store/di"
 	users "github.com/ghulammuzz/backend-parkerin/internal/users/di"
+	"github.com/gofiber/fiber/v2"
 
 	"github.com/ghulammuzz/backend-parkerin/pkg/log"
-	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 )
 
@@ -20,15 +20,22 @@ func init() {
 	env := flag.String("env", "prod", "Environment for (stg/prod)")
 	flag.Parse()
 
+	lokiClient, err := config.InitLoki()
+	if err != nil {
+		fmt.Println("Error init loki")
+		return
+	}
+
 	if *env == "stg" {
-		log.InitLogger("dev")
+		log.InitLogger("dev", lokiClient)
 		err := godotenv.Load("./stg.env")
 		if err != nil {
 			log.Error("Error loading stg.env file: %v", err)
 		}
 		log.Info("Environment: staging (stg.env loaded)")
+		log.Debug("debug tests")
 	} else {
-		log.InitLogger("prod")
+		log.InitLogger("prod", lokiClient)
 		log.Info("Environment: production (using system environment variables)")
 	}
 	config.InitStorage()
@@ -43,6 +50,8 @@ func main() {
 	}
 	defer db.Close()
 
+	// midtransClient := config.InitMidtrans()
+
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 	})
@@ -53,6 +62,7 @@ func main() {
 	users.InitializedUsersService(db, config.Validate).Router(api)
 	store.InitializedStoreService(db).Router(api)
 	applicants.InitializedApplicationService(db).Router(api)
+	// payment.InitializedPaymentService(db, midtransClient).Router(api)
 
 	if err := app.Listen(fmt.Sprint(":", os.Getenv("APP_PORT"))); err != nil {
 		log.Error("Failed to start the server: %v", err)

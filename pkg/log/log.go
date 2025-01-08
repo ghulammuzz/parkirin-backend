@@ -2,17 +2,19 @@ package log
 
 import (
 	"log/slog"
-	"os"
+
+	"github.com/grafana/loki-client-go/loki"
+	slogloki "github.com/samber/slog-loki/v3"
 )
 
 var Logger *slog.Logger
 
-func InitLogger(profile string) {
-	SetProfileLog(profile)
+func InitLogger(profile string, lokiClient *loki.Client) {
+	SetProfileLog(profile, lokiClient)
 }
 
-func SetProfileLog(profile string) {
-	var level slog.Level
+func SetProfileLog(profile string, lokiClient *loki.Client) {
+	var level slog.Leveler
 
 	switch profile {
 	case "dev":
@@ -23,11 +25,17 @@ func SetProfileLog(profile string) {
 		level = slog.LevelInfo
 	}
 
-	opts := &slog.HandlerOptions{
-		Level: level,
-	}
-	handler := slog.NewTextHandler(os.Stdout, opts)
-	Logger = slog.New(handler)
+	// opts := &slog.HandlerOptions{
+	// 	Level: level,
+	// }
+
+	// handler := slog.NewTextHandler(os.Stdout, opts)
+
+	Logger = slog.New(slogloki.Option{Level: level, Client: lokiClient}.NewLokiHandler())
+	Logger = Logger.
+		With("environment", profile).
+		With("apps_name", "be-parkirin").
+		With("release", "v1.1")
 }
 
 func Debug(msg string, args ...interface{}) {

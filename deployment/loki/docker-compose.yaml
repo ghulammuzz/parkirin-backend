@@ -1,0 +1,18 @@
+version: '3.8'  
+  
+services:  
+  loki:  
+    image: grafana/loki:main-a2d3057  
+    ports:  
+      - "3100:3100"  
+      - "9095:9095"
+    command: -config.file=/etc/loki/loki-config.yaml  
+    volumes:  
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml  
+  
+  promtail:  
+    image: grafana/promtail:main-8ac0633
+    volumes:  
+      - ./promtail-config.yaml:/etc/promtail/config.yaml  
+      - /var/log:/var/log  
+    command: -config.file=/etc/promtail/config.yaml

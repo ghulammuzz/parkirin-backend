@@ -9,9 +9,8 @@ services:
     command: -config.file=/etc/loki/loki-config.yaml  
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(`loki-test.aswaja-nulife.com`)"
-      - "traefik.http.services.prom.loadbalancer.server.port=9095"
-      - "traefik.http.services.prom.loadbalancer.server.port=3100"
+      - "traefik.http.routers.loki.rule=Host(`loki-test.aswaja-nulife.com`)"
+      - "traefik.http.services.loki.loadbalancer.server.port=3100"
     volumes:  
       - ./loki-config.yaml:/etc/loki/loki-config.yaml 
     networks:

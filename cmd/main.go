@@ -33,14 +33,14 @@ func init() {
 		mlog.Info("Environment: production (using system environment variables)")
 	}
 
-	lokiClient, err := config.InitLoki()
+	lokiClient, err := config.InitLoki(os.Getenv("LOKI_URI"))
 	if err != nil {
 		fmt.Println("Error init loki")
 		return
 	}
 
 	if *env == "stg" {
-		log.InitLogger("dev", lokiClient)
+		log.InitLogger("stg", lokiClient)
 	} else {
 		log.InitLogger("prod", lokiClient)
 	}

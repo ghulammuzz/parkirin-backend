@@ -2,18 +2,15 @@ package config
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/grafana/loki-client-go/loki"
 )
 
-func InitLoki() (*loki.Client, error) {
-	lokiURL := os.Getenv("LOKI_URL")
-	// slog.Info(lokiURL)
-	if lokiURL == "" {
-		lokiURL = "http://localhost:3100/loki/api/v1/push"
+func InitLoki(uri string) (*loki.Client, error) {
+	if uri == "" {
+		return nil, fmt.Errorf("empty env loki_url")
 	}
-	config, err := loki.NewDefaultConfig(lokiURL)
+	config, err := loki.NewDefaultConfig(uri)
 	if err != nil {
 		return nil, fmt.Errorf("error in def config")
 	}

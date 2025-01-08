@@ -4,15 +4,30 @@ services:
   loki:  
     image: grafana/loki:main-a2d3057  
     ports:  
-      - "3100:3100"  
-      - "9095:9095"
+      - "3100"  
+      - "9095"
     command: -config.file=/etc/loki/loki-config.yaml  
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`loki-test.aswaja-nulife.com`)"
+      - "traefik.http.services.prom.loadbalancer.server.port=9095"
+      - "traefik.http.services.prom.loadbalancer.server.port=3100"
     volumes:  
-      - ./loki-config.yaml:/etc/loki/loki-config.yaml  
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml 
+    networks:
+      - dokploy-network 
   
   promtail:  
     image: grafana/promtail:main-8ac0633
+    labels:
+      - "traefik.enable=true"
     volumes:  
       - ./promtail-config.yaml:/etc/promtail/config.yaml  
       - /var/log:/var/log  
     command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true

@@ -12,6 +12,8 @@ import (
 	users "github.com/ghulammuzz/backend-parkerin/internal/users/di"
 	"github.com/gofiber/fiber/v2"
 
+	mlog "log/slog"
+
 	"github.com/ghulammuzz/backend-parkerin/pkg/log"
 	"github.com/joho/godotenv"
 )
@@ -19,6 +21,17 @@ import (
 func init() {
 	env := flag.String("env", "prod", "Environment for (stg/prod)")
 	flag.Parse()
+
+	if *env == "stg" {
+		err := godotenv.Load("./stg.env")
+		if err != nil {
+			mlog.Error("Error loading stg.env file ")
+		}
+		mlog.Info("Environment: staging (stg.env loaded)")
+		mlog.Debug("debug tests")
+	} else {
+		mlog.Info("Environment: production (using system environment variables)")
+	}
 
 	lokiClient, err := config.InitLoki()
 	if err != nil {
@@ -28,16 +41,10 @@ func init() {
 
 	if *env == "stg" {
 		log.InitLogger("dev", lokiClient)
-		err := godotenv.Load("./stg.env")
-		if err != nil {
-			log.Error("Error loading stg.env file: %v", err)
-		}
-		log.Info("Environment: staging (stg.env loaded)")
-		log.Debug("debug tests")
 	} else {
 		log.InitLogger("prod", lokiClient)
-		log.Info("Environment: production (using system environment variables)")
 	}
+
 	config.InitStorage()
 	config.InitValidator()
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/ghulammuzz/backend-parkerin/internal/users/entity"
 	"github.com/ghulammuzz/backend-parkerin/internal/users/svc"
 	"github.com/ghulammuzz/backend-parkerin/pkg/form"
+	"github.com/ghulammuzz/backend-parkerin/pkg/log"
 	"github.com/ghulammuzz/backend-parkerin/pkg/response"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -34,27 +35,33 @@ func (h *UserHandler) Router(r fiber.Router) {
 func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 	user := new(entity.UserRegisterRequest)
 	if err := c.BodyParser(user); err != nil {
+		log.Error("Error parsing request body: %v", err)
 		return response.JSON(c, 400, "invalid payload", err.Error())
 	}
 	if err := h.val.Struct(user); err != nil {
 		validationErrors := form.ValidationErrorResponse(err)
+		log.Error("Validation failed: %v", validationErrors)
 		return response.JSON(c, 400, "Validation failed", validationErrors)
 	}
 
 	exists, err := h.userService.IsPhoneNumberExists(user.PhoneNumber)
 	if err != nil {
+		log.Error("Error checking phone number: %v", err)
 		return response.JSON(c, 500, "Error checking phone number", err.Error())
 	}
 	if exists {
+		log.Error("Phone number already registered: %s", user.PhoneNumber)
 		return response.JSON(c, 400, "Phone number already registered", nil)
 	}
 	if user.Role == "store" {
 		if user.StoreName == nil || user.Address == nil || user.Latitude == nil || user.Longitude == nil || user.WorkingHours == nil {
+			log.Error("Validation failed for store role: store_name, address, working_hours, latitude, and longitude are required") // Log error
 			return response.JSON(c, 400, "Validation failed", "store_name, address, working_hours, latitude, and longitude are required for store role")
 		}
-	} 
+	}
 
 	if err := h.userService.RegisterUser(user); err != nil {
+		log.Error("Error registering user: %v", err)
 		return response.JSON(c, 500, "register svc error", err.Error())
 	}
 
@@ -64,22 +71,15 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 	loginRequest := new(entity.UserLoginRequest)
 	if err := c.BodyParser(loginRequest); err != nil {
+		log.Error("Error parsing login request body: %v", err)
 		return response.JSON(c, 400, "Invalid payload", err.Error())
 	}
 
 	token, err := h.userService.LoginUser(loginRequest)
 	if err != nil {
+		log.Error("Login failed: %v", err)
 		return response.JSON(c, 401, "Login failed", err.Error())
 	}
-
-	// c.Cookie(&fiber.Cookie{
-	// 	Name:     "auth_token",
-	// 	Value:    token,
-	// 	Expires:  time.Now().Add(24 * time.Hour),
-	// 	HTTPOnly: true,
-	// 	Secure:   true,
-	// 	SameSite: "Strict",
-	// })
 
 	return response.JSON(c, 200, "Login successful", token)
 }
@@ -87,11 +87,13 @@ func (h *UserHandler) LoginUser(c *fiber.Ctx) error {
 func (h *UserHandler) LoginStore(c *fiber.Ctx) error {
 	loginRequest := new(entity.UserLoginRequest)
 	if err := c.BodyParser(loginRequest); err != nil {
+		log.Error("Error parsing store login request body: %v", err)
 		return response.JSON(c, 400, "Invalid payload", err.Error())
 	}
 
 	token, err := h.userService.LoginStore(loginRequest)
 	if err != nil {
+		log.Error("Store login failed: %v", err)
 		return response.JSON(c, 401, "Login failed", err.Error())
 	}
 
@@ -103,6 +105,7 @@ func (h *UserHandler) DashboardUser(c *fiber.Ctx) error {
 
 	claims, ok := userToken.Claims.(jwt.MapClaims)
 	if !ok || !userToken.Valid {
+		log.Error("Invalid token")
 		return response.JSON(c, fiber.StatusUnauthorized, "Invalid token", nil)
 	}
 
@@ -110,6 +113,7 @@ func (h *UserHandler) DashboardUser(c *fiber.Ctx) error {
 
 	user, err := h.userService.GetUserDetails(userID)
 	if err != nil {
+		log.Error("Failed to fetch user details: %v", err)
 		return response.JSON(c, fiber.StatusInternalServerError, "Failed to fetch user details", err.Error())
 	}
 
@@ -128,14 +132,12 @@ func (h *UserHandler) ListUser(c *fiber.Ctx) error {
 	}
 	limit, err := strconv.Atoi(c.Query("limit", "10"))
 	if err != nil || limit < 1 {
-		limit = 10 // default limit
+		limit = 10
 	}
-
-	// log.Debug(strconv.Itoa(page))
-	// log.Debug(strconv.Itoa(limit))
 
 	users, err := h.userService.ListUser(page, limit)
 	if err != nil {
+		log.Error("Failed to retrieve user list: %v", err)
 		return response.JSON(c, fiber.StatusInternalServerError, "Failed to retrieve user list", err.Error())
 	}
 
@@ -146,11 +148,13 @@ func (h *UserHandler) DetailUser(c *fiber.Ctx) error {
 	userIDStr := c.Params("id")
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil || userID < 1 {
+		log.Error("Invalid user ID: %s", userIDStr)
 		return response.JSON(c, fiber.StatusBadRequest, "Invalid user ID", nil)
 	}
 
 	userDetail, err := h.userService.GetUserDetails(userID)
 	if err != nil {
+		log.Error("Failed to retrieve user details: %v", err)
 		return response.JSON(c, fiber.StatusInternalServerError, "Failed to retrieve user details", err.Error())
 	}
 

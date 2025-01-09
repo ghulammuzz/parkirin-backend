@@ -42,12 +42,13 @@ func (h *StoreHandler) ListStores(c *fiber.Ctx) error {
 
 	isHiring, err := strconv.ParseBool(c.Query("isHiring", "false"))
 	if err != nil {
+		log.Error("Invalid isHiring parameter", slog.String("error", err.Error()))
 		return response.JSON(c, fiber.StatusBadRequest, "Invalid isHiring parameter", nil)
 	}
-	// log.Debug(strconv.FormatBool(isHiring))
 
 	stores, err := h.storeService.ListStores(page, limit, isHiring)
 	if err != nil {
+		log.Error("Failed to retrieve store list", slog.String("error", err.Error()))
 		return response.JSON(c, fiber.StatusInternalServerError, "Failed to retrieve store list", err.Error())
 	}
 
@@ -58,11 +59,13 @@ func (h *StoreHandler) GetStoreDetail(c *fiber.Ctx) error {
 	storeIDStr := c.Params("id")
 	storeID, err := strconv.Atoi(storeIDStr)
 	if err != nil || storeID < 1 {
+		log.Error("Invalid store ID", slog.String("storeID", storeIDStr))
 		return response.JSON(c, fiber.StatusBadRequest, "Invalid store ID", nil)
 	}
 
 	storeDetail, err := h.storeService.GetStoreDetail(storeID)
 	if err != nil {
+		log.Error("Failed to retrieve store details", slog.String("error", err.Error()))
 		return response.JSON(c, fiber.StatusInternalServerError, "Failed to retrieve store details", err.Error())
 	}
 
@@ -74,6 +77,7 @@ func (h *StoreHandler) DashboardStore(c *fiber.Ctx) error {
 
 	claims, ok := userToken.Claims.(jwt.MapClaims)
 	if !ok || !userToken.Valid {
+		log.Error("Invalid token")
 		return response.JSON(c, fiber.StatusUnauthorized, "Invalid token", nil)
 	}
 
@@ -81,6 +85,7 @@ func (h *StoreHandler) DashboardStore(c *fiber.Ctx) error {
 
 	store, err := h.storeService.DashboardStore(userID)
 	if err != nil {
+		log.Error("Failed to fetch store details", slog.String("error", err.Error()))
 		return response.JSON(c, fiber.StatusInternalServerError, "Failed to fetch store details", err.Error())
 	}
 
@@ -90,13 +95,15 @@ func (h *StoreHandler) DashboardStore(c *fiber.Ctx) error {
 func (h *StoreHandler) UpdateIsHiringHandler(c *fiber.Ctx) error {
 	var req entity.UpdateIsHiringRequest
 	if err := c.BodyParser(&req); err != nil {
+		log.Error("Payload error", slog.String("error", err.Error()))
 		return response.JSON(c, 400, "Payload error", err.Error())
-
 	}
+
 	userToken := c.Locals("user").(*jwt.Token)
 
 	claims, ok := userToken.Claims.(jwt.MapClaims)
 	if !ok || !userToken.Valid {
+		log.Error("Invalid token")
 		return response.JSON(c, fiber.StatusUnauthorized, "Invalid token", nil)
 	}
 
@@ -105,24 +112,25 @@ func (h *StoreHandler) UpdateIsHiringHandler(c *fiber.Ctx) error {
 	// using get storeID by userID
 	storeID, err := h.storeService.GetStoreIDByUserID(userID)
 	if err != nil {
+		log.Error("Invalid user ID", slog.String("userID", fmt.Sprint(userID)))
 		return response.JSON(c, 400, "invalid user ID", nil)
 	}
 	log.Debug(fmt.Sprint(storeID))
 
 	if err := h.storeService.UpdateIsHiring(req.IsHiring, storeID); err != nil {
+		log.Error("Error updating hiring status", slog.String("error", err.Error()))
 		return response.JSON(c, 500, "error svc", err.Error())
-
 	}
 
 	return response.JSON(c, 200, "Success Updated", nil)
-
 }
-func (h *StoreHandler) UplaodStoreIMGHandler(c *fiber.Ctx) error {
 
+func (h *StoreHandler) UplaodStoreIMGHandler(c *fiber.Ctx) error {
 	userToken := c.Locals("user").(*jwt.Token)
 
 	claims, ok := userToken.Claims.(jwt.MapClaims)
 	if !ok || !userToken.Valid {
+		log.Error("Invalid token")
 		return response.JSON(c, fiber.StatusUnauthorized, "Invalid token", nil)
 	}
 
@@ -130,6 +138,7 @@ func (h *StoreHandler) UplaodStoreIMGHandler(c *fiber.Ctx) error {
 
 	storeID, err := h.storeService.GetStoreIDByUserID(userID)
 	if err != nil {
+		log.Error("Invalid user ID", slog.String("userID", fmt.Sprint(userID)))
 		return response.JSON(c, 400, "invalid user ID", nil)
 	}
 	log.Debug(fmt.Sprint(storeID))
@@ -142,11 +151,13 @@ func (h *StoreHandler) UplaodStoreIMGHandler(c *fiber.Ctx) error {
 
 	const maxSize = 2 * 1024 * 1024
 	if img.Size > maxSize {
+		log.Error("Image size exceeds limit", slog.String("size", fmt.Sprint(img.Size)))
 		return response.JSON(c, 400, "Image size exceeds 2 MB", nil)
 	}
 
 	err = h.storeService.UploadStoreIMG(storeID, img)
 	if err != nil {
+		log.Error("Error uploading image", slog.String("error", err.Error()))
 		return response.JSON(c, 500, "error svc upload img", err.Error())
 	}
 
